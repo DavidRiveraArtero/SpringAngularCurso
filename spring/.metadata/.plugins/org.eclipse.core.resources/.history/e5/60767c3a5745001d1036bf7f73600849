@@ -1,0 +1,18 @@
+package com.bolsadeideas.springboot.backend.apirest.models.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.bolsadeideas.springboot.backend.apirest.models.entity.Cliente;
+
+public class ClienteServiceImpl implements IClienteService{
+	
+	@Autowired
+	@Override
+	public List<Cliente> findAll() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+}

@@ -1,0 +1,10 @@
+<button class="btn btn-primary my-3" (click)="cambiarEstado()">{{txtBoton}}</button>
+
+<div class="card mt-3" >
+  <div class="card-header">
+    Lista de Cursos
+  </div>
+  <ul class="list-group" *ngIf="!ocultar">
+    <li class="list-group-item" ng-active *ngFor="let item of listaCurso">{{item}}</li>
+  </ul>
+</div>
