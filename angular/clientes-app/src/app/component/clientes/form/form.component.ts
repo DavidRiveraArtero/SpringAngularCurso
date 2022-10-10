@@ -39,16 +39,15 @@ export class FormComponent implements OnInit {
       }
     })
   }
-
+  // LA FORMA DE UPDATE y CREATE SON IGUAL DE VALIDAS
   public crear(){
-    console.log("dentro")
-    console.log(this.cliente)
+
     this.clienteService.postCliente(this.cliente).subscribe(
       cliente => {
 
         this.router.navigate(['/clientes'])
         Swal.fire('Nuevo Cliente',
-                  `Cliente ${this.cliente.nombre} creado con exito!`,
+                  `El cliente fue creado con exito!!! ${cliente.nombre}`,
                   'success')
       }
     )
@@ -56,10 +55,10 @@ export class FormComponent implements OnInit {
 
   public update():void{
     this.clienteService.updateClient(this.cliente).subscribe(
-      cliente => {
+      json => {
         this.router.navigate(['/clientes']);
         let hola = Swal.fire('Cliente Actualizado',
-                   `Cliente ${this.cliente.nombre} ha sido actualizado con exito`,
+                   `${json.mensaje} ${json.cliente.nombre}`,
                    'success');
 
         console.log(hola)
