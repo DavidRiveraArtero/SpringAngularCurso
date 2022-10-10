@@ -1,9 +1,13 @@
 package com.bolsadeideas.springboot.backend.apirest.controllers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,38 +39,98 @@ public class ClienteRestController {
 	
 	// READ ONE CLIENT
 	@GetMapping("/clientes/{id}")  
-	public Cliente show(@PathVariable Long id) { // @PathVariable es la anotación que nos sirve dentro de Spring framework para configurar variables dentro de los propios segmentos de la URL
-		return clienteService.findById(id);
+	public ResponseEntity<?> show(@PathVariable Long id) { // @PathVariable es la anotación que nos sirve dentro de Spring framework para configurar variables dentro de los propios segmentos de la URL
+		
+		Cliente cliente = null;
+		Map<String, Object> response = new HashMap<>();
+		System.out.println(response);
+		try {
+			cliente = clienteService.findById(id);
+		}catch(DataAccessException e) {
+			// ERROR POR BASE DE DATOS
+			response.put("mensaje", "Error en realizar la consulta");
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		// ERROR CLIENTE NO ENCONTRADO
+		if(cliente == null) {
+			
+			response.put("mensaje", "El cliente ID: ".concat(id.toString().concat(" no existte en la base de datos")));
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
+			
+		}
+		// TODO CORRECTO
+		return new ResponseEntity<Cliente>(cliente, HttpStatus.OK); 
 	}
 	
 	// CREATE CLIENT
 	@PostMapping("/clientes")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public Cliente create(@RequestBody Cliente cliente) { // @Request body para decirle que la peticion estara dentro del body
-		return clienteService.save(cliente);
+	public ResponseEntity<?> create(@RequestBody Cliente cliente) { // @Request body para decirle que la peticion estara dentro del body
+		Cliente clienteNew = null;
+		Map<String, Object> response = new HashMap<>();
+		try {
+			clienteNew = clienteService.save(cliente);
+		}catch(DataAccessException e) {
+			response.put("mensaje", "Error en realizar el insert");
+			response.put("catch", e.getLocalizedMessage().concat(":").concat(e.getMostSpecificCause().toString()));
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		response.put("mensjae", "Usuario creado con exito");
+		response.put("cliente", clienteNew);
+		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
 	}
 	
 	// DELETE CLIENT
 	@DeleteMapping("/clientes/{id}")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public void deleteC(@PathVariable Long id) {
-		clienteService.deleteC(id);
+
+	public ResponseEntity<?> deleteC(@PathVariable Long id) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			clienteService.deleteC(id);
+		}catch(DataAccessException e) {
+			response.put("mensaje", "Error al borrar al cliente");
+			response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		response.put("mensaje", "Cliente borrado con exito");
+		return new ResponseEntity<Map<String, Object>>(response,HttpStatus.OK);
+		
+		
 	}
 	
 	// UPDATE CLIENTE
 	@PutMapping("/clientes/{id}")
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public Cliente updateC(@RequestBody Cliente cliente, @PathVariable Long id) {
+	public ResponseEntity<?> updateC(@RequestBody Cliente cliente, @PathVariable Long id) {
 		
 		Cliente clienteActual = clienteService.findById(id);
-		System.out.println("Antes: "+ clienteActual.getNombre());
-		clienteActual.setApellido(cliente.getApellido());
-	
-		clienteActual.setNombre(cliente.getNombre());
-		System.out.println("Ahora: "+ clienteActual.getNombre());
-		clienteActual.setEmail(cliente.getEmail());
+		Cliente clienteUpdate = null;
+		Map<String, Object> response = new HashMap<>();
 		
-		return clienteService.save(clienteActual);
+		if(clienteActual == null) {
+			response.put("mensaje", "El cliente con ID: ".concat(clienteActual.getId().toString()).concat(" no existe"));
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+		
+		try {
+			clienteActual.setApellido(cliente.getApellido());
+			clienteActual.setNombre(cliente.getNombre());
+			clienteActual.setEmail(cliente.getEmail());
+			
+			clienteUpdate = clienteService.save(clienteActual);
+			
+		}catch(DataAccessException e) {
+			response.put("Mensaje", "Error al actualizar los datos del usuario");
+			response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		response.put("mesaje", "El cliente fue actualizado");
+		response.put("cliente", clienteUpdate);
+		
+		return new ResponseEntity<>(response, HttpStatus.OK) ;
 	}
 	
 	
