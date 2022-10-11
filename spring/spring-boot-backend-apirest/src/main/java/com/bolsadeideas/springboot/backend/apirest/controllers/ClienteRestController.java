@@ -1,22 +1,24 @@
 package com.bolsadeideas.springboot.backend.apirest.controllers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
+import org.hibernate.query.criteria.internal.expression.function.AggregationFunction.COUNT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bolsadeideas.springboot.backend.apirest.models.entity.Cliente;
@@ -65,15 +67,37 @@ public class ClienteRestController {
 	
 	// CREATE CLIENT
 	@PostMapping("/clientes")
-	public ResponseEntity<?> create(@RequestBody Cliente cliente) { // @Request body para decirle que la peticion estara dentro del body
+	public ResponseEntity<?> create(@Valid Cliente cliente, BindingResult result) { // @Request body para decirle que la peticion estara dentro del body
+		
 		Cliente clienteNew = null;
 		Map<String, Object> response = new HashMap<>();
+		
+		
+		
+		if(result.hasErrors()) {
+			List<String> errors = new ArrayList<>();
+			
+			// UNA FORMA LAS DOS FORMAS SON CORRECTAS
+			result.getFieldErrors().forEach((err) -> {
+				errors.add("El campo '" + err.getField() + "' " + err.getDefaultMessage());
+			});
+			
+			// OTRA FORMA
+			/*List<String> errors2 = result.getFieldErrors()
+					.stream()
+					.map(err -> "El campo '" + err.getField() + "' " + err.getDefaultMessage())
+					.collect(Collectors.toList());
+			*/
+			response.put("errors",errors);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
+		}
+		
 		try {
 			clienteNew = clienteService.save(cliente);
 		}catch(DataAccessException e) {
 			response.put("mensaje", "Error en realizar el insert");
 			response.put("catch", e.getLocalizedMessage().concat(":").concat(e.getMostSpecificCause().toString()));
-			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
 		}
 		
 		response.put("mensaje", "Usuario creado con exito");
@@ -103,11 +127,27 @@ public class ClienteRestController {
 	// UPDATE CLIENTE
 	@PutMapping("/clientes/{id}")
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public ResponseEntity<?> updateC(@RequestBody Cliente cliente, @PathVariable Long id) {
+	public ResponseEntity<?> updateC(@Valid @RequestBody Cliente cliente, @PathVariable Long id, BindingResult result) {
 		
 		Cliente clienteActual = clienteService.findById(id);
 		Cliente clienteUpdate = null;
 		Map<String, Object> response = new HashMap<>();
+		
+		
+		if(result.hasErrors()) {
+			
+			List<String> errors = new ArrayList<>();
+			
+			
+			// UNA FORMA LAS DOS FORMAS SON CORRECTAS
+			result.getFieldErrors().forEach((err) -> {
+				errors.add("El campo '" + err.getField() + "' " + err.getDefaultMessage());
+			});
+			
+			System.out.println(errors);
+			response.put("errors",errors);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
+		}
 		
 		if(clienteActual == null) {
 			response.put("mensaje", "El cliente con ID: ".concat(clienteActual.getId().toString()).concat(" no existe"));
