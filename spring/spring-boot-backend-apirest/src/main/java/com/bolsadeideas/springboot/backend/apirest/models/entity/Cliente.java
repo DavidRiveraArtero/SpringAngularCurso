@@ -26,17 +26,20 @@ public class Cliente implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	
-	@NotBlank()
-	@Size(min = 4)
+	
+	@Size(min=4,max=12)
+	@NotEmpty
 	@NotNull
 	private String nombre;
 	
-	@NotBlank()
+	
 	@NotEmpty
+	@NotNull
+	@Size(min=4,max=13)
 	private String apellido;
 	
-	@NotNull
-	@Email()
+	@NotEmpty
+	@Email
 	@Column(nullable = false, unique = true)
 	private String email;
 	

@@ -13,11 +13,12 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 export class FormComponent implements OnInit {
 
   public cliente: Cliente = new Cliente()
-
   titulo:string = "Formulario";
-  nombre:string = "";
-  apellido:string = "";
-  email:string = "";
+  private errors:string[] = [];
+
+  public errNombre:string = ""
+  public errApellido:string = ""
+  public errEmail:string = ""
 
   constructor(
     private clienteService:ClienteService,
@@ -51,52 +52,92 @@ export class FormComponent implements OnInit {
   // LA FORMA DE UPDATE y CREATE SON IGUAL DE VALIDAS
   public crear(){
 
-    this.cliente.nombre = this.miFormulario?.controls['name'].value
-    this.cliente.apellido = this.miFormulario?.controls['apellido'].value
-    this.cliente.email = this.miFormulario?.controls['email'].value
+    this.clienteService.postCliente(this.cliente).subscribe(
+      cliente => {
+        this.router.navigate(['/clientes'])
+        Swal.fire('Nuevo Cliente',
+                  `El cliente fue creado con exito!!! ${cliente.nombre}`,
+                  'success')
+      },
+      err => {
+        this.errors = err.error.errors as string[];
+        console.error("Codigo del estado " + err.status)
+        console.error(err.error.errors)
 
+        for(var x = 0; x<err.error.errors.length;x++){
+          if(err.error.errors[x].includes('nombre')){
 
-    if(this.miFormulario.valid == true){
-      this.clienteService.postCliente(this.cliente).subscribe(
-        cliente => {
+            this.errNombre = err.error.errors[x]
 
-          this.router.navigate(['/clientes'])
-          Swal.fire('Nuevo Cliente',
-                    `El cliente fue creado con exito!!! ${cliente.nombre}`,
-                    'success')
+          }
+
+          if(err.error.errors[x].includes('apellido')){
+            this.errApellido = err.error.errors[x]
+          }
+
+          if(err.error.errors[x].includes('email')){
+            this.errEmail = err.error.errors[x]
+          }
+
         }
-      )
-    }else{
-      Swal.fire('Informacion Invalida',
-      `Algunos campos son incorrectos`,
-      'error');
-    }
+
+      }
+    )
+
+
 
   }
 
   public update():void{
-    if(this.miFormulario.valid == true){
-      this.clienteService.updateClient(this.cliente).subscribe(
-        json => {
-          this.router.navigate(['/clientes']);
-          let hola = Swal.fire('Cliente Actualizado',
-                    `${json.mensaje} ${json.cliente.nombre}`,
-                    'success');
 
-          console.log(hola)
+    this.clienteService.updateClient(this.cliente).subscribe(
+      json => {
+        this.router.navigate(['/clientes']);
+        Swal.fire('Cliente Actualizado',
+                  `${json.mensaje} ${json.cliente.nombre}`,
+                  'success');
+      },
+      err => {
+        console.log(err.error.errors)
+        this.errors = err.error.errors as string[];
+        console.error("Codigo del estado " + err.status)
+        console.error(err.error.errors)
+
+        for(var x = 0; x<err.error.errors.length;x++){
+          if(err.error.errors[x].field.includes('nombre')){
+
+            this.errNombre = err.error.errors[x].defaultMessage
+
+          }
+
+          if(err.error.errors[x].field.includes('apellido')){
+            this.errApellido = err.error.errors[x].defaultMessage
+          }
+
+          if(err.error.errors[x].field.includes('email')){
+            this.errEmail = err.error.errors[x].defaultMessage
+          }
+
         }
-      )
-    }else{
-      Swal.fire('Informacion Invalida',
-                   `Algunos campos son incorrectos`,
-                   'error');
-    }
+      }
+    )
+
   }
 
   // VALIDACIONES DEL FORM
   validNombre(){
+    this.errNombre = "Campo Obligatorio"
     return !this.miFormulario.controls['name'].valid && (this.miFormulario.controls['name'].touched || this.miFormulario.controls['name'].dirty )
+
   }
 
-
+  resetNombreError(){
+    this.errNombre = ""
+  }
+  resetApellidoError(){
+    this.errApellido = ""
+  }
+  resetEmailError(){
+    this.errEmail = ""
+  }
 }

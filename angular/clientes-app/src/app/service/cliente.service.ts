@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Cliente } from '../interface/cliente/cliente';
-import { Observable, map, catchError,throwError } from 'rxjs';
+import { Observable, map, catchError,throwError, tap } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
@@ -20,10 +20,24 @@ export class ClienteService {
               private router:Router) { }
 
   // RECOGER LOS CLIENTES
-  getClientes(): Observable<Cliente[]>{ // Observable = CUANDO HAYA UN CAMBIO EN EL BACK END LOS DATOS EN EL FRONT END SE MODIFICAN AUTOMATICAMENTE
-    this.get.subscribe()
+  getClientes(page:number): Observable<any>{ // Observable = CUANDO HAYA UN CAMBIO EN EL BACK END LOS DATOS EN EL FRONT END SE MODIFICAN AUTOMATICAMENTE
 
-    return this.httpClient.get<Cliente[]>(this.url);
+
+    return this.httpClient.get(this.url + '/page/' + page ).pipe(
+      tap( (response:any) => {
+        (response.content as Cliente[]).forEach(cliente => {
+          console.log(cliente)
+        })
+      }),
+      map((response:any) => {
+
+        (response.content as Cliente[]).map(cliente => {
+          cliente.nombre = cliente.nombre.toUpperCase();
+          return cliente
+        })
+        return response
+      })
+    );
 
   }
 
@@ -33,6 +47,11 @@ export class ClienteService {
     return this.httpClient.post(this.url,cliente,{headers:this.httpHeader}).pipe(
       map((response:any) => response.cliente as Cliente),
       catchError(e => {
+        console.log(e.status)
+        if(e.status == 400){
+          return throwError(e)
+        }
+
         Swal.fire("Error al crear el cliente", e.error.mensaje,'error');
         return throwError(e)
       })
@@ -58,6 +77,12 @@ export class ClienteService {
 
     return this.httpClient.put<any>(`${this.url}/${client.id}`, client, {headers: this.httpHeader}).pipe(
       catchError(e => {
+
+        if(e.status == 400){
+          console.log("hola",e)
+          return throwError(e)
+        }
+
         Swal.fire("Error al actualizar", e.error.mensaje,'error')
         return throwError(e)
       })

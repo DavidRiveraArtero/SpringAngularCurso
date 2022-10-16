@@ -13,6 +13,10 @@ const routes:Routes = [
     component: ClientesComponent
   },
   {
+    path:'clientes/page/:page',
+    component: ClientesComponent
+  },
+  {
     path:'directiva',
     component: DirectivaComponent
   },

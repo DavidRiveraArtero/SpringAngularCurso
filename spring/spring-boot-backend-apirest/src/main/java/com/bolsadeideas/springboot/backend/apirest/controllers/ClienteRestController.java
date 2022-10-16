@@ -12,6 +12,9 @@ import javax.validation.Valid;
 import org.hibernate.query.criteria.internal.expression.function.AggregationFunction.COUNT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -37,6 +40,13 @@ public class ClienteRestController {
 	@GetMapping("/clientes") // /api/cliente esto seria un endpoint 
 	public List<Cliente> index(){
 		return clienteService.findAll();
+	}
+	
+	// READ ALL CLIENTE
+	@GetMapping("/clientes/page/{page}") // /api/cliente esto seria un endpoint 
+	public Page<Cliente> index(@PathVariable Integer page){
+		Pageable pageable = PageRequest.of(page, 4);
+		return clienteService.findAll(pageable);
 	}
 	
 	// READ ONE CLIENT
@@ -67,12 +77,12 @@ public class ClienteRestController {
 	
 	// CREATE CLIENT
 	@PostMapping("/clientes")
-	public ResponseEntity<?> create(@Valid Cliente cliente, BindingResult result) { // @Request body para decirle que la peticion estara dentro del body
+	public ResponseEntity<?> create(@RequestBody @Valid Cliente cliente, BindingResult result) { // @Request body para decirle que la peticion estara dentro del body
 		
 		Cliente clienteNew = null;
 		Map<String, Object> response = new HashMap<>();
 		
-		
+		System.out.print(cliente.getNombre());
 		
 		if(result.hasErrors()) {
 			List<String> errors = new ArrayList<>();
@@ -82,12 +92,6 @@ public class ClienteRestController {
 				errors.add("El campo '" + err.getField() + "' " + err.getDefaultMessage());
 			});
 			
-			// OTRA FORMA
-			/*List<String> errors2 = result.getFieldErrors()
-					.stream()
-					.map(err -> "El campo '" + err.getField() + "' " + err.getDefaultMessage())
-					.collect(Collectors.toList());
-			*/
 			response.put("errors",errors);
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
 		}
@@ -138,13 +142,11 @@ public class ClienteRestController {
 			
 			List<String> errors = new ArrayList<>();
 			
-			
 			// UNA FORMA LAS DOS FORMAS SON CORRECTAS
 			result.getFieldErrors().forEach((err) -> {
 				errors.add("El campo '" + err.getField() + "' " + err.getDefaultMessage());
 			});
 			
-			System.out.println(errors);
 			response.put("errors",errors);
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
 		}

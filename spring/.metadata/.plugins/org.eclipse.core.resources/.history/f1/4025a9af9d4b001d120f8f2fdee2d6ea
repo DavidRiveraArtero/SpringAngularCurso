@@ -1,0 +1,65 @@
+package com.bolsadeideas.springboot.backend.apirest.models.services;
+
+//IMPORTS DE JAVA
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+// IMPORTS PROPIOS 
+import com.bolsadeideas.springboot.backend.apirest.models.dao.IClienteDao;
+import com.bolsadeideas.springboot.backend.apirest.models.entity.Cliente;
+
+@Service
+public class ClienteServiceImpl implements IClienteService{
+	
+	@Autowired
+	private IClienteDao clienteDao; // LLAMAMOS AL OBJETO ICLIENTEDAO PARA PODER USAR SUS METODOS
+	
+	// READ
+	@Override
+	@Transactional(readOnly = true)
+	public List<Cliente> findAll() {
+		
+		return (List<Cliente>) clienteDao.findAll();
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public Page<Cliente> findAll(Pageable pageable) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	// FindByID
+		@Override
+		@Transactional(readOnly = true)
+		public Cliente findById(Long id) {
+			// Si lo encuentra devuelve el cliente si no regresa un null 
+			return clienteDao.findById(id).orElse(null);
+		}
+
+	// CREATE
+	@Override
+	@Transactional
+	public Cliente save(Cliente cliente) {
+		// Guarda el nuevo cliente
+		return clienteDao.save(cliente);
+	}
+	
+	//DELETE
+	@Override
+	@Transactional
+	public void deleteC(Long id) {
+		// Elimina el cliente por el id
+		clienteDao.deleteById(id);
+		
+	}
+
+
+
+	
+	
+}

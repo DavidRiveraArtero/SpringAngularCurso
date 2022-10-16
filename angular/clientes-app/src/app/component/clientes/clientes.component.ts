@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Cliente } from 'src/app/interface/cliente/cliente';
 import { ClienteService } from 'src/app/service/cliente.service';
 import Swal from 'sweetalert2';
-import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { formatDate } from '@angular/common';   // formatDate(cliente.createAt, 'dd-MM-yyyy') para modificar como se ve la fecha
 
 @Component({
   selector: 'app-clientes',
@@ -12,17 +13,30 @@ import { Router } from '@angular/router';
 export class ClientesComponent implements OnInit {
 
   clientes: Cliente[] = [];
-
+  page:number = 0
   constructor(
     private clienteService:ClienteService,
-    private router:Router
+    private activateRouter: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
-    this.clienteService.getClientes()
-    .subscribe(valor => {
-       this.clientes = valor
-    });
+
+    this.activateRouter.paramMap.subscribe( params => {
+
+      this.page = +!params.get('page')
+
+      if(!this.page){
+        console.log("dentro")
+        this.page = 0
+      }
+
+      this.clienteService.getClientes(this.page)
+        .subscribe(valor => {
+          this.clientes = valor.content
+        console.log("NgOnit",valor)
+      });
+    })
+
   }
 
 
@@ -48,8 +62,8 @@ export class ClientesComponent implements OnInit {
         this.clienteService.deleteClient(cliente.id).subscribe(
           () => {
             // ACTUALIZAR LA LISTA DE CLIENTES
-            this.clienteService.getClientes().subscribe(cliente => {
-              this.clientes = cliente
+            this.clienteService.getClientes(this.page).subscribe(cliente => {
+              this.clientes = cliente.content
             });
 
             swalWithBootstrapButtons.fire(
